@@ -1,14 +1,21 @@
 #include <Arduino.h>
 #include <main.h>
 
-void P_event() {
-    P_counter++;
+void P_event()
+{
+  P_counter++;
 }
 
-void setup() {
+void setup()
+{
   Serial.begin(9600);
 
-  //Configure the LED for output and sets the intial state to off
+  // Start the I2C Bus as Slave on address 9
+  Wire.begin(9);
+  // Attach a function to trigger when something is received.
+  Wire.onReceive(receiveEvent);
+
+  // Configure the LED for output and sets the intial state to off
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
 
@@ -25,17 +32,57 @@ void setup() {
   serial_commands_.AddCommand(&cmd_h_);
   serial_commands_.AddCommand(&cmd_p_);
 
-  stepper.setMaxSpeed(700);
-  stepper.setAcceleration(1);
-  stepper.setMinPulseWidth(50);
+  attachInterrupt(0, P_event, FALLING);
 
-  attachInterrupt(0,P_event,FALLING);
+  engine.init();
+  stepper = engine.stepperConnectToPin(stepPinStepper);
+  if (stepper)
+  {
+    stepper->setDirectionPin(dirPinStepper);
+    stepper->setEnablePin(enablePinStepper);
+    stepper->setAutoEnable(true);
 
+    // If auto enable/disable need delays, just add (one or both):
+    // stepper->setDelayToEnable(50);
+    // stepper->setDelayToDisable(1000);
+    stepper->setSpeedInHz(8000);
+    stepper->setAcceleration(1000);
+    stepper->move(100000);
+  }
 }
 
-void loop() {
-  //stepper.runSpeed();
-  //stepper.setSpeed(analog_in);
-  serial_commands_.ReadSerial();
-  stepper.run();
+void loop()
+{
+  if (recBuffer != 0)
+  {
+    //Serial.println(recBuffer);
+    if (recBuffer == 1)
+    {
+      digitalWrite(LED_BUILTIN, HIGH);
+      recBuffer = 0;
+    }
+    if (recBuffer == 2)
+    {
+      digitalWrite(LED_BUILTIN, LOW);
+      recBuffer = 0;
+    }
+    if (recBuffer == 3)
+    {
+      stepper->setSpeedInHz(8000);
+      stepper->setAcceleration(1000);
+      stepper->move(100000);
+      recBuffer = 0;
+    }
+    if (recBuffer == 4)
+    {
+      stepper->setSpeedInHz(8000);
+      stepper->setAcceleration(1000);
+      stepper->move(-100000);
+      recBuffer = 0;
+    }
+    if (recBuffer == 99)
+    {
+      recBuffer = 0;
+    }
+  }
 }

@@ -1,10 +1,9 @@
 #include <AccelStepper.h>
 //AccelStepper stepper(AccelStepper::DRIVER,PIN3,PIN4, true);
-#define motorPin1  4     // Blue   - 28BYJ-48 pin 1
-#define motorPin2  5     // Pink   - 28BYJ-48 pin 2
-#define motorPin3  6     // Yellow - 28BYJ-48 pin 3
-#define motorPin4  7     // Orange - 28BYJ-48 pin 4
-AccelStepper stepper(AccelStepper::FULL4WIRE,motorPin1,motorPin3,motorPin2,motorPin4);
+#define Enable 5
+#define Pulse  6
+#define Direction 7
+AccelStepper stepper(AccelStepper::DRIVER,Pulse,Direction);
 
 int long P_counter = 0;
 
