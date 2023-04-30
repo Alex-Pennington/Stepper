@@ -1,9 +1,17 @@
-#include <AccelStepper.h>
-//AccelStepper stepper(AccelStepper::DRIVER,PIN3,PIN4, true);
-#define Enable 5
-#define Pulse  6
-#define Direction 7
-AccelStepper stepper(AccelStepper::DRIVER,Pulse,Direction);
+//As in StepperDemo for Motor 1 on AVR
+#define dirPinStepper    6
+#define enablePinStepper 7
+#define stepPinStepper   9  // OC1A in case of AVR
+#define speedometerPin 3
+
+#include <Wire.h>
+int recBuffer =0;
+
+#include "FastAccelStepper.h"
+#include "AVRStepperPins.h"
+
+FastAccelStepperEngine engine = FastAccelStepperEngine();
+FastAccelStepper *stepper = NULL;
 
 int long P_counter = 0;
 
@@ -25,7 +33,6 @@ void cmd_led_on(SerialCommands* sender)
 {
   digitalWrite(LED_BUILTIN, HIGH);  
   sender->GetSerial()->println("Led is on");
-  stepper.setCurrentPosition(0);
 }
 
 void cmd_led_off(SerialCommands* sender)
@@ -35,30 +42,18 @@ void cmd_led_off(SerialCommands* sender)
 }
 
 void cmd_stepper_ccw(SerialCommands* sender) {
-    //stepper.move(500);
-    stepper.setAcceleration(100);
-    stepper.move(2000);
 }
 
 void cmd_stepper_cw(SerialCommands* sender) {
-    stepper.setAcceleration(100);
-    stepper.move(-2000);
-}
+ }
 
 void cmd_stepper_stop(SerialCommands* sender) {
-  stepper.setAcceleration(10000000);
-  stepper.stop();
-  stepper.runToPosition();
 }
 
 void cmd_home(SerialCommands* sender) {
-  Serial.println("Home - OK");
-  stepper.setCurrentPosition(0);
-  P_counter = 0;
   }
 
 void cmd_print_position(SerialCommands* sender) {
-  Serial.println(P_counter);
 }
 
 //Note: Commands are case sensitive
@@ -78,3 +73,7 @@ SerialCommand cmd_0_("0", cmd_stepper_cw, true);
 SerialCommand cmd_s_("s", cmd_stepper_stop, true);
 SerialCommand cmd_h_("h", cmd_home, true);
 SerialCommand cmd_p_("p", cmd_print_position, true);
+
+  void receiveEvent(int bytes) {
+    recBuffer = Wire.read();    // read one character from the I2C
+  }
